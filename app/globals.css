@@ -6,8 +6,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-
-
+/* Custom properties for colors and theming */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -37,6 +36,7 @@ body {
     --chart-5: 27 87% 67%;
   }
 
+  /* Dark mode adjustments */
   .dark {
     --background: 20 14.3% 4.1%;
     --foreground: 60 9.1% 97.8%;
@@ -65,12 +65,14 @@ body {
   }
 }
 
-
+/* Use custom variables directly */
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border)); /* Use the custom variable for border color */
   }
+
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background)); /* Apply background color */
+    color: hsl(var(--foreground)); /* Apply text color */
   }
 }
