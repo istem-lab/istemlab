@@ -21,5 +21,6 @@ export default function Home() {
     {/* <TechnologiesWeUse/> */}
     <Footer/>
   </div>
+  // THIS IS SAMPE CHANGE
   );
 }
