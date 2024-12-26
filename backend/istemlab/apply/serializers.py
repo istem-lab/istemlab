@@ -1,6 +1,5 @@
-from rest_framework import serializers, viewsets, routers
-
-from apply.models import Apply
+from rest_framework import serializers
+from .models import Apply
 # serializers.py
 class ApplicationSerializer(serializers.ModelSerializer):
     class Meta:
