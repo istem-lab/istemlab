@@ -8,7 +8,7 @@ const Footer = () => {
         <CardContent className="py-6 px-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-8">
           {/* Left Content */}
           <div className="text-sm text-muted-foreground text-center">
-            &copy; {2024} ISTEM Lab. All rights reserved.
+            &copy; 2024 ISTEM Lab. All rights reserved.
           </div>
           {/* Right Content */}
           <div className="text-sm text-muted-foreground text-center">
