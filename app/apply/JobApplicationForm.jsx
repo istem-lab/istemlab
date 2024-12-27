@@ -24,27 +24,30 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  role: z.string().min(1, { message: "Please select a role." }),
-  level: z.string().min(1, { message: "Please select a level." }),
-  file: z
-    .instanceof(File)
-    .refine((file) => file.type === "application/pdf", {
-      message: "Only PDF files are allowed.",
-    })
-    .optional(),
-  message: z.string().min(10, {
-    message: "Message must be at least 10 characters.",
-  }),
-});
-
+// Move schema inside the component to ensure it only runs on client
 export default function JobApplicationForm() {
+  // Define the schema inside the component
+  const formSchema = z.object({
+    name: z.string().min(2, {
+      message: "Name must be at least 2 characters.",
+    }),
+    email: z.string().email({
+      message: "Please enter a valid email address.",
+    }),
+    role: z.string().min(1, { message: "Please select a role." }),
+    level: z.string().min(1, { message: "Please select a level." }),
+    file: typeof File === "undefined" 
+      ? z.any() 
+      : z.instanceof(File)
+          .refine((file) => file.type === "application/pdf", {
+            message: "Only PDF files are allowed.",
+          })
+          .optional(),
+    message: z.string().min(10, {
+      message: "Message must be at least 10 characters.",
+    }),
+  });
+
   const [submitted, setSubmitted] = useState(false);
   const form = useForm({
     resolver: zodResolver(formSchema),
