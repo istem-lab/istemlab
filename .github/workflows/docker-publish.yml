@@ -1,25 +1,34 @@
-name: publish
+name: Publish Docker Image
+
+permissions:
+  contents: read
+  packages: write
 
 on:
   push:
     branches: [ "main" ]
 
 env:
-  # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.actor }}/istemlab:latest
+  IMAGE_NAME: istemlab:latest
 
 jobs:
   publish:
-    name: publish image
+    name: Publish Image to GHCR
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Login
+    # Step 1: Checkout the Repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Authenticate with GHCR
+    - name: Authenticate with GitHub Container Registry
       run: |
-        echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-    - name: Build and Publish Backend
+        echo "${{ secrets.PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+    # Step 3: Build and Push Docker Image
+    - name: Build and Push Docker Image
       run: |
-        docker build . --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        docker build . -t ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_NAME }}
+        docker push ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_NAME }}
