@@ -10,72 +10,55 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: istemlab  # Just the image name
+  IMAGE_NAME: istemlab
 
 jobs:
   publish:
     name: Publish Image to GHCR
     runs-on: ubuntu-latest
-
     steps:
-    # Step 1: Checkout the Repository
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Step 2: Authenticate with GHCR
-    - name: Authenticate with GitHub Container Registry
-      run: |
-        echo "${{ secrets.PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-    
-    # Step 3: Build and Push Docker Image
-    - name: Build and Push Docker Image
-      run: |
-        set -e  # Exit immediately if a command exits with a non-zero status.
-        IMAGE_TAG=${{ github.sha }}
-        docker build . -t ${{ env.REGISTRY }}/${{ github.repository }}:${IMAGE_TAG}
-        docker push ${{ env.REGISTRY }}/${{ github.repository }}:${IMAGE_TAG}
+      - name: Authenticate with GitHub Container Registry
+        run: |
+          echo "${{ secrets.PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          set -e
+          IMAGE_TAG=${{ github.sha }}
+          docker build . -t ${{ env.REGISTRY }}/${{ github.repository }}:${IMAGE_TAG}
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}:${IMAGE_TAG}
 
   deploy:
     needs: publish
     name: Deploy Image
     runs-on: ubuntu-latest
-    
     steps:
-    # Step 1: Install SSH keys
-    - name: Setup SSH
-      run: |
-        echo "Creating .ssh directory"
-        mkdir -p $HOME/.ssh
-        echo "Listing contents of home directory:"
-        ls -la $HOME
-        
-        # Check if SSH_PRIVATE_KEY is set and not empty
-        if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-          echo "Error: SSH_PRIVATE_KEY is not set."
-          exit 1
-        fi
+      - name: Setup SSH
+        run: |
+          mkdir -p $HOME/.ssh
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "Error: SSH_PRIVATE_KEY is not set."
+            exit 1
+          fi
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          if [ ! -f "$HOME/.ssh/id_rsa" ]; then
+            echo "Error: id_rsa file was not created."
+            exit 1
+          fi
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> $HOME/.ssh/known_hosts
 
-        # Write the SSH private key to a file
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
-        chmod 600 $HOME/.ssh/id_rsa
+      - name: Connect and Pull Image
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            cd ${{ secrets.WORK_DIR }} &&
+            docker compose pull &&
+            docker compose up -d
+          "
 
-        # Check if id_rsa was created successfully
-        if [ ! -f "$HOME/.ssh/id_rsa" ]; then
-          echo "Error: id_rsa file was not created."
-          exit 1
-        fi
-
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> $HOME/.ssh/known_hosts
-    
-    # Step 2: Connect via SSH and pull the image
-    - name: Connect and Pull Image
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-          cd ${{ secrets.WORK_DIR }} && 
-          docker compose pull && 
-          docker compose up -d
-        "
-    
-    # Step 3: Clean up SSH keys
-    - name: Clean up SSH keys
-      run: rm -rf $HOME/.ssh
+      - name: Clean up SSH keys
+        if: always()
+        run: rm -rf $HOME/.ssh
