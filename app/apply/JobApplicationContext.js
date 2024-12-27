@@ -16,7 +16,7 @@ export const JobApplicationProvider = ({ children }) => {
     setAlert({ type: '', message: '' });
 
     // Check if file size is greater than 5 MB
-    if (data.file && data.file.size > 5000000) { // 5000000 bytes (5 MB)
+    if (data.file && typeof window !== 'undefined' && data.file.size > 5000000) { // Check if running in the browser
       setLoading(false);
       setAlert({
         type: 'error',
@@ -45,7 +45,7 @@ export const JobApplicationProvider = ({ children }) => {
         setAlert({ type: 'success', message: 'Application submitted successfully!' });
       } else {
         const errorData = await response.json();
-        console.log(errorData.email[0])
+        console.log(errorData.email[0]);
         setAlert({ type: 'error', message: errorData.email[0] || 'Submission failed.' });
       }
     } catch (error) {
