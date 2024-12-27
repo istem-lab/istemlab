@@ -184,7 +184,7 @@ export function HeroSection() {
         <canvas
           ref={canvasRef}
           className="w-full h-full"
-          style={{ backgroundColor: "transparent" }}
+          // style={{ backgroundColor: "transparent" }}
         />
       </div>
 

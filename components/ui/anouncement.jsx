@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 const announcements = [
   { text: "Seeking for advisors.", link: "/advisors" },
-  { text: "Join our team now!", link: "/apply" },
+  // { text: "Join our team now!", link: "/apply" },
 ];
 
 const Announcement = () => {

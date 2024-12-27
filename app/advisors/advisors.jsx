@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import React, { useContext } from 'react';
+import { AdvisorsContext } from "./AdvisorsContext";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -38,6 +40,8 @@ const formSchema = z.object({
 });
 
 export default function AdvisorsForm() {
+  const { loading, alert, submitAdvisor, setAlert } = useContext(AdvisorsContext);
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,9 +52,12 @@ export default function AdvisorsForm() {
     },
   });
 
-  function onSubmit(values) {
-    console.log(values);
-  }
+  const onSubmit = async (values) => {
+    await submitAdvisor(values);
+    if (alert.type === 'success') {
+      form.reset();
+    }
+  };
 
   return (
     <div className="flex flex-col lg:flex-row min-h-full items-center justify-center gap-8 p-4 md:pt-40">
@@ -125,8 +132,8 @@ export default function AdvisorsForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full sm:w-auto">
-                Submit
+              <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
+                {loading ? 'Submitting...' : 'Submit'}
               </Button>
             </form>
           </Form>
@@ -138,11 +145,11 @@ export default function AdvisorsForm() {
         <Card className="w-full p-6 border-none ">
           <CardContent>
             <blockquote className="mt-6 border-l-2 pl-6 italic">
-            <h2 className="text-2xl font-bold mb-4">We are seeking advisors!</h2>
-            If you have passion, courage, and ideas to share, we want you. Whether you bring fresh concepts or insights into our existing products, your input can guide and inspire us.
+              <h2 className="text-2xl font-bold mb-4">We are seeking advisors!</h2>
+              If you have passion, courage, and ideas to share, we want you. Whether you bring fresh concepts or insights into our existing products, your input can guide and inspire us.
             </blockquote>
             <blockquote className="mt-6 border-l-2 pl-6 italic">
-            We're open to sharing knowledge, resources, and opportunities based on mutual agreement. Whether it's through collaboration, intensive exchange, or tailored contributions, we’ll ensure you feel valued as an integral part of our mission to create change. Let’s grow together!
+              We're open to sharing knowledge, resources, and opportunities based on mutual agreement. Whether it's through collaboration, intensive exchange, or tailored contributions, we’ll ensure you feel valued as an integral part of our mission to create change. Let’s grow together!
             </blockquote>
           </CardContent>
         </Card>

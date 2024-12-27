@@ -1,9 +1,8 @@
 
-from email.message import EmailMessage
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage, send_mail
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from apply.models import Apply
+from .models import Apply
 from decouple import config
 
 # signals.py
@@ -23,7 +22,7 @@ def application_created(sender, instance, created, **kwargs):
                     f"Level: {instance.level}\n"
                     f"Message: {instance.message}"
                 ),
-                from_email=config('DEFAULT_FROM_EMAIL'),
+                from_email=config('EMAIL_HOST_USER'),
                 to=[config('EMAIL_HOST_USER')],
             )
             if instance.resume:
@@ -38,8 +37,9 @@ def application_created(sender, instance, created, **kwargs):
                     f"We have received your application for the role of {instance.role} at the {instance.level} level. "
                     "We will review your application and get back to you soon."
                 ),
-                from_email=config('DEFAULT_FROM_EMAIL'),
+                from_email=config('EMAIL_HOST_USER'),
                 recipient_list=[instance.email],
             )
-    except:
-        print("exception occured !") 
+    except Exception as e:
+        print("exception occured !")
+        print(e) 

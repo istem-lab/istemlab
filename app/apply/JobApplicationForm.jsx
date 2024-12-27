@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useContext } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,32 +23,46 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { JobApplicationContext } from "./JobApplicationContext";
 
-// Move schema inside the component to ensure it only runs on client
+
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  role: z.string().min(1, { message: "Please select a role." }),
+  level: z.string().min(1, { message: "Please select a level." }),
+  file: z
+    .instanceof(File)
+    .refine((file) => file.type === "application/pdf", {
+      message: "Only PDF files are allowed.",
+    })
+    .optional(),
+  message: z.string().min(10, {
+    message: "Message must be at least 10 characters.",
+  }),
+});
+
+const CustomAlert = ({ type, message, onClose }) => {
+  
+  return (
+    <Alert variant={type === 'success' ? 'success' : 'destructive'}>
+      <AlertTitle>{type === 'success' ? 'Success' : 'Error'}</AlertTitle>
+      <AlertDescription>{message}</AlertDescription>
+      <Button variant="ghost" size="icon" onClick={onClose}>
+        <X className="w-4 h-4" />
+      </Button>
+    </Alert>
+  );
+};
+
+
 export default function JobApplicationForm() {
-  // Define the schema inside the component
-  const formSchema = z.object({
-    name: z.string().min(2, {
-      message: "Name must be at least 2 characters.",
-    }),
-    email: z.string().email({
-      message: "Please enter a valid email address.",
-    }),
-    role: z.string().min(1, { message: "Please select a role." }),
-    level: z.string().min(1, { message: "Please select a level." }),
-    file: typeof File === "undefined" 
-      ? z.any() 
-      : z.instanceof(File)
-          .refine((file) => file.type === "application/pdf", {
-            message: "Only PDF files are allowed.",
-          })
-          .optional(),
-    message: z.string().min(10, {
-      message: "Message must be at least 10 characters.",
-    }),
-  });
+  const { loading, alert, submitApplication } = useContext(JobApplicationContext);
 
-  const [submitted, setSubmitted] = useState(false);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,10 +75,12 @@ export default function JobApplicationForm() {
     },
   });
 
-  function onSubmit(values) {
-    console.log(values);
-    setSubmitted(true);
-  }
+  const onSubmit = async (values) => {
+    await submitApplication(values);
+    if (alert.type === 'success') {
+      form.reset();
+    }
+  };
 
   return (
     <div className="flex flex-col lg:flex-row min-h-full items-center justify-center gap-8 p-4 md:pt-20">
@@ -86,7 +102,7 @@ export default function JobApplicationForm() {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your name" value={field.value || ""} {...field} />
+                      <Input placeholder="Enter your name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -102,7 +118,6 @@ export default function JobApplicationForm() {
                       <Input
                         placeholder="Enter your email"
                         type="email"
-                        value={field.value || ""}
                         {...field}
                       />
                     </FormControl>
@@ -118,7 +133,7 @@ export default function JobApplicationForm() {
                     <FormLabel>Role</FormLabel>
                     <FormControl>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(val) => field.onChange(val)}
                         defaultValue={field.value || ""}
                       >
                         <SelectTrigger>
@@ -128,7 +143,7 @@ export default function JobApplicationForm() {
                           <SelectItem value="frontend">Frontend (React)</SelectItem>
                           <SelectItem value="backend">Backend (Django)</SelectItem>
                           <SelectItem value="data-engineer">Data Engineer</SelectItem>
-                          <SelectItem value="flutter">Mobile(flutter)</SelectItem>
+                          <SelectItem value="flutter">Mobile (Flutter)</SelectItem>
                           <SelectItem value="devops">DevOps</SelectItem>
                           <SelectItem value="geoai">GeoAI</SelectItem>
                         </SelectContent>
@@ -146,7 +161,7 @@ export default function JobApplicationForm() {
                     <FormLabel>Level</FormLabel>
                     <FormControl>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(val) => field.onChange(val)}
                         defaultValue={field.value || ""}
                       >
                         <SelectTrigger>
@@ -191,7 +206,6 @@ export default function JobApplicationForm() {
                       <Textarea
                         placeholder="Tell us why you're a great fit"
                         className="min-h-[120px] resize-none"
-                        value={field.value || ""}
                         {...field}
                       />
                     </FormControl>
@@ -199,12 +213,11 @@ export default function JobApplicationForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full sm:w-auto">
-                Submit Application
+              <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
+                {loading ? 'Submitting...' : 'Submit Application'}
               </Button>
             </form>
           </Form>
-          {submitted && <p className="mt-4 text-green-500">Application submitted successfully!</p>}
         </CardContent>
       </Card>
 
