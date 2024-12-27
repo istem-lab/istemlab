@@ -49,8 +49,22 @@ jobs:
         echo "Listing contents of home directory:"
         ls -la $HOME
         
+        # Check if SSH_PRIVATE_KEY is set and not empty
+        if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+          echo "Error: SSH_PRIVATE_KEY is not set."
+          exit 1
+        fi
+
+        # Write the SSH private key to a file
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
         chmod 600 $HOME/.ssh/id_rsa
+
+        # Check if id_rsa was created successfully
+        if [ ! -f "$HOME/.ssh/id_rsa" ]; then
+          echo "Error: id_rsa file was not created."
+          exit 1
+        fi
+
         ssh-keyscan -H ${{ secrets.SSH_HOST }} >> $HOME/.ssh/known_hosts
     
     # Step 2: Connect via SSH and pull the image
