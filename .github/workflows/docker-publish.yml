@@ -10,7 +10,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: istemlab:latest
+  IMAGE_NAME: istemlab  # Just the image name
 
 jobs:
   publish:
@@ -26,9 +26,9 @@ jobs:
     - name: Authenticate with GitHub Container Registry
       run: |
         echo "${{ secrets.PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
+    
     # Step 3: Build and Push Docker Image
     - name: Build and Push Docker Image
       run: |
-        docker build . -t ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_NAME }}
-        docker push ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_NAME }}
+        docker build . -t ${{ env.REGISTRY }}/${{ github.repository }}:latest
+        docker push ${{ env.REGISTRY }}/${{ github.repository }}:latest
