@@ -32,3 +32,30 @@ jobs:
       run: |
         docker build . -t ${{ env.REGISTRY }}/${{ github.repository }}:latest
         docker push ${{ env.REGISTRY }}/${{ github.repository }}:latest
+  
+  deploy:
+    needs: publish
+    name: Deploy Image
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Step 1: Install SSH keys
+    - name: Install SSH keys
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+    
+    # Step 2: Connect via SSH and pull the image
+    - name: Connect and Pull Image
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+          cd ${{ secrets.WORK_DIR }} && 
+          docker compose pull && 
+          docker compose up -d
+        "
+    
+    # Step 3: Clean up SSH keys
+    - name: Clean up SSH keys
+      run: rm -rf ~/.ssh
