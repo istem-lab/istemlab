@@ -30,9 +30,11 @@ jobs:
     # Step 3: Build and Push Docker Image
     - name: Build and Push Docker Image
       run: |
-        docker build . -t ${{ env.REGISTRY }}/${{ github.repository }}:latest
-        docker push ${{ env.REGISTRY }}/${{ github.repository }}:latest
-  
+        set -e  # Exit immediately if a command exits with a non-zero status.
+        IMAGE_TAG=${{ github.sha }}
+        docker build . -t ${{ env.REGISTRY }}/${{ github.repository }}:${IMAGE_TAG}
+        docker push ${{ env.REGISTRY }}/${{ github.repository }}:${IMAGE_TAG}
+
   deploy:
     needs: publish
     name: Deploy Image
@@ -40,12 +42,16 @@ jobs:
     
     steps:
     # Step 1: Install SSH keys
-    - name: Install SSH keys
+    - name: Setup SSH
       run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+        echo "Creating .ssh directory"
+        mkdir -p $HOME/.ssh
+        echo "Listing contents of home directory:"
+        ls -la $HOME
+        
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
+        chmod 600 $HOME/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> $HOME/.ssh/known_hosts
     
     # Step 2: Connect via SSH and pull the image
     - name: Connect and Pull Image
@@ -58,4 +64,4 @@ jobs:
     
     # Step 3: Clean up SSH keys
     - name: Clean up SSH keys
-      run: rm -rf ~/.ssh
+      run: rm -rf $HOME/.ssh
