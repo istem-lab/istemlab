@@ -1,64 +1,24 @@
-name: Publish Docker Image
-
-permissions:
-  contents: read
-  packages: write
-
+name: publish
 on:
-  push:
-    branches: [ "main" ]
-
+ push:
+   branches: [ "main" ]
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: istemlab
+ REGISTRY: ghcr.io
+ IMAGE_NAME: ${{ github.actor }}/istemlab:${{ github.sha }}
 
 jobs:
-  publish:
-    name: Publish Image to GHCR
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+ publish:
+   name: publish image
+   runs-on: ubuntu-latest
+   timeout-minutes: 30
+   steps:
+   - uses: actions/checkout@v3
+   - name: Login
+     run: |
+       echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+   - name: Build and Publish Backend
+     run: |
+       docker build . --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} || exit 1
+       docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} || exit 1
 
-      - name: Authenticate with GitHub Container Registry
-        run: |
-          echo "${{ secrets.PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
-      - name: Build and Push Docker Image
-        run: |
-          set -e
-          IMAGE_TAG=${{ github.sha }}
-          docker build . -t ${{ env.REGISTRY }}/${{ github.repository }}:${IMAGE_TAG}
-          docker push ${{ env.REGISTRY }}/${{ github.repository }}:${IMAGE_TAG}
-
-  deploy:
-    needs: publish
-    name: Deploy Image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup SSH
-        run: |
-          mkdir -p $HOME/.ssh
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
-            echo "Error: SSH_PRIVATE_KEY is not set."
-            exit 1
-          fi
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
-          chmod 600 $HOME/.ssh/id_rsa
-          if [ ! -f "$HOME/.ssh/id_rsa" ]; then
-            echo "Error: id_rsa file was not created."
-            exit 1
-          fi
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> $HOME/.ssh/known_hosts
-
-      - name: Connect and Pull Image
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            cd ${{ secrets.WORK_DIR }} &&
-            docker compose pull &&
-            docker compose up -d
-          "
-
-      - name: Clean up SSH keys
-        if: always()
-        run: rm -rf $HOME/.ssh
+ 
