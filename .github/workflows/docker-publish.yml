@@ -37,13 +37,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup SSH
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          mkdir -p $HOME/.ssh
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "Error: SSH_PRIVATE_KEY is not set."
+            exit 1
+          fi
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          if [ ! -f "$HOME/.ssh/id_rsa" ]; then
+            echo "Error: id_rsa file was not created."
+            exit 1
+          fi
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> $HOME/.ssh/known_hosts
 
       - name: Connect and Pull Image
         run: |
@@ -55,4 +61,4 @@ jobs:
 
       - name: Clean up SSH keys
         if: always()
-        run: rm -rf ~/.ssh
+        run: rm -rf $HOME/.ssh
