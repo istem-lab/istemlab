@@ -29,7 +29,7 @@ jobs:
       # Run ESLint to check for issues
       - name: Run ESLint
         run: |
-          npx eslint . --ext .js, .jsx, .mjs --max-warnings 0  # This ensures the build fails if any linting warnings are found
+          npx eslint . --max-warnings 0  # This ensures the build fails if any linting warnings are found
 
       # Docker login and build/push image
       - name: Login
