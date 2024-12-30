@@ -1,16 +1,19 @@
+# Use official Node.js LTS image
 FROM node:18-alpine AS deps
 WORKDIR /app
 
-# Copy package files
+# Install dependencies
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --prefer-offline --no-audit --progress=false
 
 # Rebuild the source code only when needed
 FROM node:18-alpine AS builder
 WORKDIR /app
 
-# Copy dependencies and source code
+# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code
 COPY . .
 
 # Set environment variables
@@ -29,19 +32,21 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
-# Copy necessary files
+# Copy necessary files from builder
 COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 
-# Set up application files
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copy the built Next.js app
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
-# Set user
+# Change ownership to non-root user
+RUN chown -R nextjs:nodejs ./
+
+# Switch to non-root user
 USER nextjs
 
 # Expose port

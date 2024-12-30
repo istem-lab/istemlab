@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { JobApplicationContext } from "./JobApplicationContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { X } from "lucide-react"; // Ensure you have lucide-react installed
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -18,8 +20,11 @@ const formSchema = z.object({
   role: z.string().min(1, { message: "Please select a role." }),
   level: z.string().min(1, { message: "Please select a level." }),
   file: z
-    .instanceof(File)
-    .refine((file) => typeof window !== 'undefined' && file.type === "application/pdf", {
+    .any()
+    .refine((file) => {
+      if (typeof window === "undefined") return true; // Skip validation on server
+      return file instanceof File && file.type === "application/pdf";
+    }, {
       message: "Only PDF files are allowed.",
     })
     .optional(),
@@ -156,6 +161,9 @@ export default function JobApplicationForm() {
         <Card className="w-full p-6 border-none">
           <CardContent> 
             {/* Motivational Quotes */}
+            {alert.message && (
+              <CustomAlert type={alert.type} message={alert.message} onClose={() => {/* Implement onClose handler */}} />
+            )}
             <blockquote className="mt-6 border-l-2 pl-6 italic">
               <h2 className="text-2xl font-bold mb-4">Join Our Team</h2> 
               Explore opportunities to grow your career with us. Your skills and passion can make a difference.
