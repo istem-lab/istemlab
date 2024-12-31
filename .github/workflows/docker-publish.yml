@@ -33,14 +33,19 @@ jobs:
     steps:
       - name: Install SSH keys
         run: |
-          
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
-          chmod 600 $HOME/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> $HOME/.ssh/known_hosts
+          mkdir -p /home/istemlab/istemlab/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/istemlab/istemlab/.ssh/id_rsa
+          chmod 600 /home/istemlab/istemlab/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> /home/istemlab/istemlab/.ssh/known_hosts
 
       - name: Connect and Pull Docker Image
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && docker compose pull && docker compose up -d && exit"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "\
+            cd ${{ secrets.WORK_DIR }} && \
+            docker compose pull && \
+            docker compose up -d && \
+            exit"
 
       - name: Cleanup
-        run: rm -rf $HOME/.ssh
+        run: |
+          rm -rf /home/istemlab/istemlab/.ssh
