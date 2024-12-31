@@ -25,15 +25,17 @@ jobs:
     steps:
       - name: Configure SSH
         run: |
-          eval $(ssh-agent -s)
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo "Host deploy_host
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            Port ${{ secrets.SSH_PORT }}
+            StrictHostKeyChecking no
+            IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          chmod 600 ~/.ssh/config
           
       - name: Connect and Pull Docker Image
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "\
-            cd ${{ secrets.WORK_DIR }} && \
-            docker compose pull && \
-            docker compose up -d"
+          ssh deploy_host "cd ${{ secrets.WORK_DIR }} && docker compose pull && docker compose up -d"
