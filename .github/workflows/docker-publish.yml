@@ -1,51 +1,34 @@
 name: Publish Docker Image
-
 on:
   push:
     branches: [ "main" ]
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: istemlab:latest
-
 jobs:
   publish:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
-
       - name: Log in to GitHub Container Registry
         run: |
           echo "${{ secrets.PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-
       - name: Build and Push Docker Image
         run: |
           docker build . -t ${{ env.REGISTRY }}/istem-lab/${{ env.IMAGE_NAME }}
           docker push ${{ env.REGISTRY }}/istem-lab/${{ env.IMAGE_NAME }}
-
   deploy:
     needs: publish
     name: Deploy Image
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check SSH Installation
-        run: ssh -V
-
-      - name: Install OpenSSH (if needed)
-        if: failure()
-        run: sudo apt-get update && sudo apt-get install -y openssh-client
-
       - name: Install SSH keys
         run: |
-          sudo mkdir -p /home/istemlab/istemlab/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/istemlab/istemlab/.ssh/id_rsa
-          chmod 600 /home/istemlab/istemlab/.ssh/id_rsa
-          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> /home/istemlab/istemlab/.ssh/known_hosts
-          ls -la /home/istemlab/istemlab/.ssh
-
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
       - name: Connect and Pull Docker Image
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "\
@@ -53,7 +36,6 @@ jobs:
             docker compose pull && \
             docker compose up -d && \
             exit"
-
       - name: Cleanup
         run: |
-          rm -rf /home/istemlab/istemlab/.ssh
+          rm -rf ~/.ssh
