@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Install SSH keys
         run: |
-          mkdir -p /home/istemlab/istemlab/.ssh
+          
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/istemlab/istemlab/.ssh/id_rsa
           chmod 600 /home/istemlab/istemlab/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> /home/istemlab/istemlab/.ssh/known_hosts
