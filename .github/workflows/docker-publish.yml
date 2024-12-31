@@ -18,9 +18,27 @@ jobs:
 
       - name: Log in to GitHub Container Registry
         run: |
-          echo ${{ secrets.PAT }} | docker login ${{ env.REGISTRY }} -u istem-lab --password-stdin
+          echo ${{ secrets.PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
       - name: Build and Push Docker Image
         run: |
           docker build . -t ${{ env.REGISTRY }}/istem-lab/${{ env.IMAGE_NAME }}
           docker push ${{ env.REGISTRY }}/istem-lab/${{ env.IMAGE_NAME }}
+
+  deploy:
+    needs: publish
+    name: Deploy Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install SSH keys
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+
+      - name: Connect and Pull Docker Image
+        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && docker compose pull && docker compose up -d && exit"
+
+      - name: Cleanup
+        run: rm -rf ~/.ssh
