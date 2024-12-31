@@ -18,7 +18,7 @@ jobs:
 
       - name: Log in to GitHub Container Registry
         run: |
-          echo ${{ secrets.PAT }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
       - name: Build and Push Docker Image
         run: |
@@ -31,12 +31,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check SSH Installation
+        run: ssh -V
+
+      - name: Install OpenSSH (if needed)
+        if: failure()
+        run: sudo apt-get update && sudo apt-get install -y openssh-client
+
       - name: Install SSH keys
         run: |
-          
+          mkdir -p /home/istemlab/istemlab/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/istemlab/istemlab/.ssh/id_rsa
           chmod 600 /home/istemlab/istemlab/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> /home/istemlab/istemlab/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> /home/istemlab/istemlab/.ssh/known_hosts
+          ls -la /home/istemlab/istemlab/.ssh
 
       - name: Connect and Pull Docker Image
         run: |
