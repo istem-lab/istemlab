@@ -23,24 +23,17 @@ jobs:
     name: Deploy Image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3  # Add this to get your working directory
-      - name: Setup SSH
-        env:
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Configure SSH
         run: |
-          mkdir -p ./.ssh
-          echo "$SSH_KEY" > ./.ssh/id_rsa
-          chmod 600 ./.ssh/id_rsa
-          ssh-keyscan -t rsa ${{ secrets.SSH_HOST }} >> ./.ssh/known_hosts
+          eval $(ssh-agent -s)
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
           
       - name: Connect and Pull Docker Image
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          WORK_DIR: ${{ secrets.WORK_DIR }}
         run: |
-          ssh -i "./.ssh/id_rsa" -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "cd $WORK_DIR && docker compose pull && docker compose up -d"
-
-      - name: Cleanup
-        if: always()
-        run: rm -rf ./.ssh
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "\
+            cd ${{ secrets.WORK_DIR }} && \
+            docker compose pull && \
+            docker compose up -d"
