@@ -16,9 +16,20 @@ services:
     container_name: nginx-proxy
     restart: unless-stopped
     ports:
-      - "80:80" # Expose nginx to the host machine
+      -  "81:80" # Expose nginx to the host machine
+      -  "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes: 
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email jeshanpokharel123@gmail.com -d istem-lab.com --agree-tos
     depends_on:
       - nextjs
     networks:
