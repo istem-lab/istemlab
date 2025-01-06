@@ -1,50 +1,38 @@
 name: Publish and Deploy Docker Images
-
 on:
   push:
     branches: [ "main" ]
 
 env:
   REGISTRY: ghcr.io
-  ORGANIZATION: istem-lab
-  FRONTEND_IMAGE: istemlab
-  BACKEND_IMAGE: backend
-  IMAGE_TAG: latest
+  FRONTEND_IMAGE: istemlab-frontend:latest
+  BACKEND_IMAGE: istemlab-backend:latest
 
 jobs:
   publish:
     name: Build and Push Docker Images
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      
+      - uses: actions/checkout@v3
+
       - name: Log in to GitHub Container Registry
         run: |
           echo "${{ secrets.PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-          
+
       - name: Build and Push Frontend Image
         run: |
-          docker build -t ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }} ./frontend
-          docker push ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
-          
+          docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.FRONTEND_IMAGE }} ./frontend
+          docker push ${{ env.REGISTRY }}/istem-lab/${{ env.FRONTEND_IMAGE }}
+
       - name: Build and Push Backend Image
         run: |
-          docker build -t ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }} ./backend
-          docker push ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
+          docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }} ./backend
+          docker push ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }}
 
   deploy:
     needs: publish
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    
     steps:
       - name: Configure SSH
         run: |
@@ -59,50 +47,6 @@ jobs:
             IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
           chmod 600 ~/.ssh/config
           
-      - name: Login to Registry on Remote Server
+      - name: Connect and Pull New Images
         run: |
-          ssh deploy_host "echo '${{ secrets.PAT }}' | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin"
-      
-      - name: Create deployment directory if not exists
-        run: |
-          ssh deploy_host "mkdir -p ${{ secrets.WORK_DIR }}"
-      
-      - name: Copy docker-compose file to server
-        run: |
-          cat > docker-compose.yml << 'EOL'
-          version: '3'
-          services:
-            frontend:
-              container_name: frontend
-              image: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
-              ports:
-                - "3000:3000"
-              environment:
-                - NODE_ENV=production
-                - HOST=0.0.0.0
-              depends_on:
-                - backend
-              command: node server.js
-            
-            backend:
-              container_name: backend
-              image: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
-              ports:
-                - "5000:5000"
-              environment:
-                - NODE_ENV=production
-                - HOST=0.0.0.0
-          EOL
-          scp docker-compose.yml deploy_host:${{ secrets.WORK_DIR }}/docker-compose.yml
-
-      - name: Deploy and Start Services
-        run: |
-          ssh deploy_host "cd ${{ secrets.WORK_DIR }} && \
-          docker compose pull --no-parallel && \
-          docker compose up -d --remove-orphans"
-      
-      - name: Check Deployment Status
-        run: |
-          ssh deploy_host "cd ${{ secrets.WORK_DIR }} && \
-          docker compose ps && \
-          docker compose logs --tail=100"
+          ssh deploy_host "cd ${{ secrets.WORK_DIR }} && docker compose pull && docker compose up -d"
