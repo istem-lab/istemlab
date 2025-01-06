@@ -1,4 +1,5 @@
 name: Publish and Deploy Docker Images
+
 on:
   push:
     branches: [ "main" ]
@@ -26,7 +27,7 @@ jobs:
 
       - name: Build and Push Backend Image
         run: |
-          docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }} ./backend/istemlab
+          docker build -f ./backend/istemlab/Dockerfile -t ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }} ./backend/istemlab
           docker push ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }}
 
   deploy:
