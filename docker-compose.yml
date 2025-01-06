@@ -1,27 +1,40 @@
 version: '3.8'
 services:
-  nextjs:
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nextjs-app
+    container_name: frontend
     restart: unless-stopped
     networks:
       - app-network
     expose:
       - "3000" # Exposed to nginx within the Docker network
-  
+
+  backend:
+    build:
+      context: ./backend/istemlab # Make sure your backend Dockerfile exists
+      dockerfile: Dockerfile.backend
+    container_name: backend
+    restart: unless-stopped
+    networks:
+      - app-network
+    expose:
+      - "5000"
+
   nginx:
     image: nginx:alpine
     container_name: nginx-proxy
     restart: unless-stopped
     ports:
-      - "81:80" # Expose nginx to the host machine
+      - "80:80"
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro  
     depends_on:
-      - nextjs
+      - frontend
+      - backend
     networks:
       - app-network
 

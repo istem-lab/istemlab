@@ -1,26 +1,37 @@
-name: Publish Docker Image
+name: Publish and Deploy Docker Images
 on:
   push:
     branches: [ "main" ]
+
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: istemlab:latest
+  FRONTEND_IMAGE: istemlab-frontend:latest
+  BACKEND_IMAGE: istemlab-backend:latest
+
 jobs:
   publish:
-    name: Build and Push Docker Image
+    name: Build and Push Docker Images
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Log in to GitHub Container Registry
         run: |
           echo "${{ secrets.PAT }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-      - name: Build and Push Docker Image
+
+      - name: Build and Push Frontend Image
         run: |
-          docker build . -t ${{ env.REGISTRY }}/istem-lab/${{ env.IMAGE_NAME }}
-          docker push ${{ env.REGISTRY }}/istem-lab/${{ env.IMAGE_NAME }}
+          docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.FRONTEND_IMAGE }} ./frontend
+          docker push ${{ env.REGISTRY }}/istem-lab/${{ env.FRONTEND_IMAGE }}
+
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }} ./backend
+          docker push ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }}
+
   deploy:
     needs: publish
-    name: Deploy Image
+    name: Deploy to VPS
     runs-on: ubuntu-latest
     steps:
       - name: Configure SSH
@@ -36,6 +47,6 @@ jobs:
             IdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
           chmod 600 ~/.ssh/config
           
-      - name: Connect and Pull Docker Image
+      - name: Connect and Pull New Images
         run: |
           ssh deploy_host "cd ${{ secrets.WORK_DIR }} && docker compose pull && docker compose up -d"
