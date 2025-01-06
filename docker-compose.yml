@@ -14,7 +14,7 @@ services:
   backend:
     build:
       context: ./backend/istemlab # Make sure your backend Dockerfile exists
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     container_name: backend
     restart: unless-stopped
     networks:
