@@ -21,12 +21,12 @@ jobs:
 
       - name: Build and Push Frontend Image
         run: |
-          docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.FRONTEND_IMAGE }} ./frontend
+          docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.FRONTEND_IMAGE }} .
           docker push ${{ env.REGISTRY }}/istem-lab/${{ env.FRONTEND_IMAGE }}
 
       - name: Build and Push Backend Image
         run: |
-          docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }} ./backend
+          docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }} ./backend/istemlab
           docker push ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }}
 
   deploy:
