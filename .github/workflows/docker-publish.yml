@@ -50,4 +50,5 @@ jobs:
           
       - name: Connect and Pull New Images
         run: |
+          ssh deploy_host "echo '${{ secrets.PAT }}' | docker login ghcr.io -u ${{ github.actor }} --password-stdin"
           ssh deploy_host "cd ${{ secrets.WORK_DIR }} && docker compose pull && docker compose up -d"
