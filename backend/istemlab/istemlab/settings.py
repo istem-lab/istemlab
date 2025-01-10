@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-m9a%7(8cokx_l+0_gzupm7=_telyvrs10^c2*w3f-u(+)vmm)j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost","127.0.0.1", "0.0.0.0"]
+ALLOWED_HOSTS = ["localhost","127.0.0.1"]
 
 
 CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8000","http://localhost:8000","http://127.0.0.1:3000","http://localhost:3000"]
@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'djsantoshi@santoshi-Inspiron-15-3511:~/Desktop/istemlab/backend/istemlab$ docker run -p 8000:8000 istemlab_mangoango.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
     'apply',

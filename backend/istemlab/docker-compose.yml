@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-
     ports:
       - "8000:8000"
     environment:
@@ -14,8 +13,13 @@ services:
       - DATABASE_PASSWORD=Istemlab@12345
       - DATABASE_HOST=db
       - DATABASE_PORT=5432
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: postgres:latest
+    container_name: postgres_db
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: istemlab
@@ -24,6 +28,11 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "istemlab"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
