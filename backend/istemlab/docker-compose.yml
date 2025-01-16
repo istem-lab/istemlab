@@ -6,37 +6,31 @@ services:
     ports:
       - "8001:8000"
     environment:
-      - DATABASE_NAME=istemlab   
+      - DATABASE_NAME=istemlab 
       - DATABASE_USER=istemlab
       - DATABASE_PASSWORD=Istemlab@12345
-      - DATABASE_HOST=147.79.68.249
+      - DATABASE_HOST=db
       - DATABASE_PORT=5432
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
-      - app-network    # Add this
+      - app-network
 
   db:
     image: postgres:latest
-    container_name: postgres_db
     environment:
-      POSTGRES_DB: istemlab
-      POSTGRES_USER: istemlab
-      POSTGRES_PASSWORD: Istemlab@12345
+      - POSTGRES_DB=istemlab
+      - POSTGRES_USER=istemlab
+      - POSTGRES_PASSWORD=Istemlab@12345
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "istemlab"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    command: postgres -c listen_addresses='*'
     networks:
-      - app-network    # Add this
+      - app-network
 
-networks:    # Add this section
+networks:
   app-network:
     driver: bridge
 
