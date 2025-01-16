@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   django:
     build:
@@ -10,7 +9,7 @@ services:
       - DATABASE_NAME=istemlab   
       - DATABASE_USER=istemlab
       - DATABASE_PASSWORD=Istemlab@12345
-      - DATABASE_HOST=db
+      - DATABASE_HOST=147.79.68.249
       - DATABASE_PORT=5432
     depends_on:
       db:
