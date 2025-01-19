@@ -21,15 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY', default='your-default-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["www.istem-lab.com", "istem-lab.com", "14.79.68.249", "localhost", "127.0.0.1",]
+ALLOWED_HOSTS = ["www.istem-lab.com", "istem-lab.com", "147.79.68.249", "localhost", "127.0.0.1",]
 
 CORS_ALLOWED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000",  "http://127.0.0.1:3000", "http://localhost:3000","https://www.istem-lab.com",
-                        "https://istem-lab.com", ]
+                        "https://istem-lab.com","http://147.79.68.249:8001", "https://147.79.68.249:8001" ]
 
 # Application definition
 CORS_ALLOW_ALL_ORIGINS = True
@@ -132,7 +132,7 @@ USE_TZ = True
 
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(_file_)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -152,4 +152,3 @@ EMAIL_PORT = config('EMAIL_PORT', cast=int)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 	
-docs.djangoproject.com
