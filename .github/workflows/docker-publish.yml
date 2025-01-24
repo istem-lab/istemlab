@@ -7,7 +7,6 @@ on:
 env:
   REGISTRY: ghcr.io
   FRONTEND_IMAGE: istemlab-frontend:latest
-  BACKEND_IMAGE: istemlab-backend:latest
 
 jobs:
   publish:
@@ -25,10 +24,7 @@ jobs:
           docker build -t ${{ env.REGISTRY }}/istem-lab/${{ env.FRONTEND_IMAGE }} .
           docker push ${{ env.REGISTRY }}/istem-lab/${{ env.FRONTEND_IMAGE }}
 
-      - name: Build and Push Backend Image
-        run: |
-          docker build -f ./backend/istemlab/Dockerfile -t ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }} ./backend/istemlab
-          docker push ${{ env.REGISTRY }}/istem-lab/${{ env.BACKEND_IMAGE }}
+      
 
   deploy:
     needs: publish
