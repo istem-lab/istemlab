@@ -10,18 +10,6 @@ services:
     expose:
       - "3000" # Exposed to nginx within the Docker network
 
-  backend:
-    build:
-      context: ./backend/istemlab # Make sure your backend Dockerfile exists
-      dockerfile: Dockerfile
-    container_name: backend
-    restart: unless-stopped
-    networks:
-      - app-networks
-
-    expose:
-      - "5000"
-
   nginx:
     image: nginx:alpine
     container_name: nginx-proxy
@@ -34,7 +22,7 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro  
     depends_on:
       - frontend
-      - backend
+      
     networks:
       - app-network
 
